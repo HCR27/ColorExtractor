@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Image Color Extractor",
+  "description": "An interactive utility to upload images, extract dominant color palettes, inspect individual pixels, and copy color values in HEX, RGB, HSL, and other formats.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
