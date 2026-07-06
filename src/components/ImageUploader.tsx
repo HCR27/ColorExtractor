@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Upload, Image as ImageIcon, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { ImageMetadata } from "../types";
@@ -7,33 +7,310 @@ interface ImageUploaderProps {
   onImageSelected: (metadata: ImageMetadata) => void;
 }
 
-const SAMPLE_IMAGES = [
-  {
-    name: "Neon Cyberpunk Street",
-    url: "https://images.unsplash.com/photo-1515621061946-eff1c2a352bd?auto=format&fit=crop&w=800&q=80",
-    description: "Vibrant neon purples, blues, and electric pinks."
-  },
-  {
-    name: "Desert Sunset Dunes",
-    url: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80",
-    description: "Warm ochres, terracotta pinks, and twilight indigo."
-  },
-  {
-    name: "Tropical Botanical Leaves",
-    url: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80",
-    description: "Deep emerald greens, moss shades, and soft earthy tones."
-  },
-  {
-    name: "Minimalist Pastel Architecture",
-    url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
-    description: "Soft peaches, light cream, and warm sandstone shadows."
+// Dynamic Client-side Canvas Art Generation Function
+function createLocalPresetImage(type: string): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = 800;
+  canvas.height = 450;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  if (type === "cyberpunk") {
+    // Cyberpunk Neon Horizon
+    const gradBg = ctx.createLinearGradient(0, 0, 0, 450);
+    gradBg.addColorStop(0, "#090115");
+    gradBg.addColorStop(0.5, "#16002c");
+    gradBg.addColorStop(1, "#03000a");
+    ctx.fillStyle = gradBg;
+    ctx.fillRect(0, 0, 800, 450);
+
+    // Glowing synthwave sun
+    const sunGrad = ctx.createRadialGradient(400, 240, 10, 400, 240, 140);
+    sunGrad.addColorStop(0, "#ff007f");
+    sunGrad.addColorStop(0.4, "#9d00ff");
+    sunGrad.addColorStop(1, "rgba(22, 0, 44, 0)");
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(400, 240, 140, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horizontal scanlines/cuts over the sun
+    ctx.fillStyle = "#090115";
+    for (let y = 160; y < 330; y += 14) {
+      const h = (y - 160) / 12 + 3;
+      ctx.fillRect(250, y, 300, h);
+    }
+
+    // Perspective Cyber Grid Lines
+    ctx.strokeStyle = "#00f0ff";
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.45;
+    const horizon = 250;
+    for (let x = -200; x <= 1000; x += 100) {
+      ctx.beginPath();
+      ctx.moveTo(400, horizon);
+      ctx.lineTo(x, 450);
+      ctx.stroke();
+    }
+    for (let y = horizon; y <= 450; y += 15) {
+      const ratio = (y - horizon) / (450 - horizon);
+      const py = horizon + Math.pow(ratio, 1.6) * (450 - horizon);
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      ctx.lineTo(800, py);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // Futuristic Monolithic Towers
+    ctx.fillStyle = "#0a0112";
+    ctx.strokeStyle = "#ff007f";
+    ctx.lineWidth = 2;
+    // Left Monolith
+    ctx.fillRect(120, 110, 70, 200);
+    ctx.strokeRect(120, 110, 70, 200);
+    // Right Monolith
+    ctx.fillStyle = "#07000d";
+    ctx.strokeStyle = "#00ffcc";
+    ctx.fillRect(610, 130, 80, 180);
+    ctx.strokeRect(610, 130, 80, 180);
+    // Center Tall Spire
+    ctx.fillStyle = "#040008";
+    ctx.strokeStyle = "#ff00ff";
+    ctx.fillRect(290, 70, 55, 250);
+    ctx.strokeRect(290, 70, 55, 250);
+
+    // Glowing Neon Orbs
+    ctx.fillStyle = "#ff007f";
+    ctx.beginPath();
+    ctx.arc(155, 140, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#00f0ff";
+    ctx.beginPath();
+    ctx.arc(317, 100, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+  } else if (type === "sunset") {
+    // Warm Desert Sunset
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 450);
+    skyGrad.addColorStop(0, "#191143");
+    skyGrad.addColorStop(0.35, "#5b1952");
+    skyGrad.addColorStop(0.65, "#b5355c");
+    skyGrad.addColorStop(0.88, "#ed815b");
+    skyGrad.addColorStop(1, "#f7eb65");
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    // Glowing bright white/golden sun
+    ctx.fillStyle = "#fffae8";
+    ctx.shadowColor = "#f79d1e";
+    ctx.shadowBlur = 35;
+    ctx.beginPath();
+    ctx.arc(480, 220, 65, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0; // reset shadow effects
+
+    // Rolling desert dunes layer 1 (Background dark magenta)
+    ctx.fillStyle = "#831f55";
+    ctx.beginPath();
+    ctx.moveTo(0, 310);
+    ctx.bezierCurveTo(220, 270, 440, 350, 800, 290);
+    ctx.lineTo(800, 450);
+    ctx.lineTo(0, 450);
+    ctx.closePath();
+    ctx.fill();
+
+    // Dune layer 2 (Middle rich terracotta)
+    ctx.fillStyle = "#b5355c";
+    ctx.beginPath();
+    ctx.moveTo(0, 350);
+    ctx.bezierCurveTo(280, 410, 480, 290, 800, 340);
+    ctx.lineTo(800, 450);
+    ctx.lineTo(0, 450);
+    ctx.closePath();
+    ctx.fill();
+
+    // Dune layer 3 (Foreground warm sunset orange)
+    ctx.fillStyle = "#e0455d";
+    ctx.beginPath();
+    ctx.moveTo(0, 395);
+    ctx.bezierCurveTo(240, 355, 540, 430, 800, 380);
+    ctx.lineTo(800, 450);
+    ctx.lineTo(0, 450);
+    ctx.closePath();
+    ctx.fill();
+
+    // Foreground dark silhouette dune (Deep burgundy)
+    ctx.fillStyle = "#270428";
+    ctx.beginPath();
+    ctx.moveTo(0, 450);
+    ctx.bezierCurveTo(380, 420, 620, 450, 800, 425);
+    ctx.lineTo(800, 450);
+    ctx.lineTo(0, 450);
+    ctx.closePath();
+    ctx.fill();
+
+  } else if (type === "botanical") {
+    // Deep Botanical Greenery
+    const bgGrad = ctx.createLinearGradient(0, 0, 800, 450);
+    bgGrad.addColorStop(0, "#051811");
+    bgGrad.addColorStop(0.5, "#133827");
+    bgGrad.addColorStop(1, "#0a2214");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    // Warm soft ambient lighting ray
+    const sunbeam = ctx.createRadialGradient(720, 40, 30, 720, 40, 350);
+    sunbeam.addColorStop(0, "rgba(245, 240, 215, 0.22)");
+    sunbeam.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = sunbeam;
+    ctx.fillRect(0, 0, 800, 450);
+
+    // Dynamic Leaf drawer
+    const drawDynamicLeaf = (cx: number, cy: number, size: number, angle: number, color: string) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((angle * Math.PI) / 180);
+      ctx.fillStyle = color;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(size * 0.45, -size * 0.35, size, 0);
+      ctx.quadraticCurveTo(size * 0.45, size * 0.35, 0, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Vein highlight
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(size, 0);
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
+    // Deep backdrop leaves
+    drawDynamicLeaf(80, 360, 260, -40, "#0e2d1d");
+    drawDynamicLeaf(180, 410, 300, -70, "#082012");
+    drawDynamicLeaf(630, 390, 250, -115, "#154232");
+
+    // Medium layers (emerald & rich moss)
+    drawDynamicLeaf(130, 230, 230, -10, "#255c41");
+    drawDynamicLeaf(430, 400, 275, -85, "#38805f");
+    drawDynamicLeaf(560, 270, 210, -140, "#133a28");
+
+    // Foreground bright leaves (Mint & soft sage)
+    drawDynamicLeaf(-10, 160, 190, 15, "#4cb17f");
+    drawDynamicLeaf(280, 310, 240, -55, "#6bc295");
+    drawDynamicLeaf(700, 190, 170, -155, "#8cd1aa");
+    drawDynamicLeaf(380, 190, 140, -25, "#255c41");
+
+    // Subtle stems
+    ctx.strokeStyle = "#aee0c3";
+    ctx.lineWidth = 2.5;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(80, 450);
+    ctx.bezierCurveTo(140, 360, 240, 310, 340, 290);
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+
+  } else if (type === "minimalist") {
+    // Minimalist Pastel Architecture
+    const wallGrad = ctx.createLinearGradient(0, 0, 0, 450);
+    wallGrad.addColorStop(0, "#f8f4ed");
+    wallGrad.addColorStop(1, "#f1e9dd");
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    // Soft drop shadow ellipse
+    ctx.fillStyle = "rgba(40, 25, 10, 0.04)";
+    ctx.beginPath();
+    ctx.ellipse(400, 345, 290, 55, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Terracotta clay round arch
+    ctx.fillStyle = "#de7559";
+    ctx.beginPath();
+    ctx.arc(400, 225, 120, Math.PI, 0, false);
+    ctx.lineTo(520, 345);
+    ctx.lineTo(280, 345);
+    ctx.closePath();
+    ctx.fill();
+
+    // Clean column shadow
+    ctx.fillStyle = "rgba(40, 25, 10, 0.07)";
+    ctx.fillRect(515, 185, 95, 160);
+
+    // Warm sand sandstone column
+    ctx.fillStyle = "#f3eee0";
+    ctx.fillRect(495, 185, 95, 160);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.035)";
+    ctx.fillRect(570, 185, 20, 160);
+
+    // 3D Peach-Blush Sphere
+    const ballGrad = ctx.createRadialGradient(285, 245, 10, 305, 265, 55);
+    ballGrad.addColorStop(0, "#fac0b2");
+    ballGrad.addColorStop(0.65, "#f29c5c");
+    ballGrad.addColorStop(1, "#e3694d");
+    ctx.fillStyle = ballGrad;
+    ctx.beginPath();
+    ctx.arc(305, 265, 55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Front structural step blocks
+    ctx.fillStyle = "#7db097";
+    ctx.fillRect(200, 345, 400, 38);
+    ctx.fillStyle = "#3b557b";
+    ctx.fillRect(250, 383, 300, 38);
+
+    // Ambient direct sunlight shadow overlay
+    ctx.fillStyle = "rgba(40, 25, 10, 0.035)";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(160, 0);
+    ctx.lineTo(560, 450);
+    ctx.lineTo(0, 450);
+    ctx.closePath();
+    ctx.fill();
   }
-];
+
+  return canvas.toDataURL("image/jpeg", 0.9);
+}
 
 export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [sampleImages, setSampleImages] = useState<{ name: string; url: string; description: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Generate gorgeous, high-resolution custom art presets locally on component mount
+    setSampleImages([
+      {
+        name: "Neon Cyberpunk Horizon",
+        url: createLocalPresetImage("cyberpunk"),
+        description: "Vibrant electric pinks, violet glows, and cyan grids."
+      },
+      {
+        name: "Desert Sunset Dunes",
+        url: createLocalPresetImage("sunset"),
+        description: "Warm terracotta pinks, glowing gold, and indigo twilight."
+      },
+      {
+        name: "Tropical Botanical Leaves",
+        url: createLocalPresetImage("botanical"),
+        description: "Deep emerald greens, mint shades, and organic forest tones."
+      },
+      {
+        name: "Minimalist Pastel Shapes",
+        url: createLocalPresetImage("minimalist"),
+        description: "Terracotta archways, warm sandstone sand, and peach spheres."
+      }
+    ]);
+  }, []);
 
   const processFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -88,8 +365,7 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
   const loadPreset = (presetUrl: string, name: string) => {
     setIsLoading(true);
     const img = new Image();
-    // Enable crossOrigin to read pixels from the remote unsplash server
-    img.crossOrigin = "anonymous";
+    // Since it's a base64 local URL, no crossOrigin attribute is needed
     img.src = presetUrl;
     img.onload = () => {
       onImageSelected({
@@ -103,7 +379,7 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
       setIsLoading(false);
     };
     img.onerror = () => {
-      alert("Failed to load sample image. Please try uploading your own instead!");
+      alert("Failed to load sample image.");
       setIsLoading(false);
     };
   };
@@ -161,11 +437,11 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-black" />
           <h3 className="text-[10px] font-extrabold text-[#999] uppercase tracking-widest font-display">
-            Or select a premium sample preset
+            Or select a premium local preset (Zero APIs)
           </h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {SAMPLE_IMAGES.map((sample, idx) => (
+          {sampleImages.map((sample, idx) => (
             <motion.button
               key={idx}
               whileHover={{ y: -2 }}
@@ -196,3 +472,4 @@ export default function ImageUploader({ onImageSelected }: ImageUploaderProps) {
     </div>
   );
 }
+
